@@ -1,5 +1,5 @@
 
-var appId = 'A7A2672C-AD11-11E4-8DAA-0A18B21C2D82';
+var appId = '6CE7D921-11C7-4763-B67A-FD27F3481656';
 var currScrollHeight = 0;
 var MESSAGE_TEXT_HEIGHT = 27;
 
@@ -21,30 +21,15 @@ var memberList = [];
 // 3.0.x
 var currentUser;
 
-$('#guide_create').click(function() {
-  $('.modal-guide-create').hide();
-});
+
+
+
+
 
 /***********************************************
  *                OPEN CHAT
  **********************************************/
-$('#btn_open_chat').click(function() {
-  popupInit();
-  $('.modal-guide-create').hide();
-  $('.left-nav-button-guide').hide();
-  $('.modal-messaging').hide();
-  $('#btn_messaging_chat').removeClass('left-nav-messaging--active');
 
-  if ($(this).hasClass('left-nav-open--active')) {
-    $('.right-section__modal-bg').hide();
-    $(this).removeClass('left-nav-open--active');
-    $('.modal-open-chat').hide();
-  } else {
-    $('.right-section__modal-bg').show();
-    $(this).addClass('left-nav-open--active');
-    getChannelList(true);
-  }
-});
 
 $('.modal-open-chat-more').click(function() {
   getChannelList(false);
@@ -283,7 +268,7 @@ function addChannel() {
     );
   }
 
-  $('.modal-guide-create').hide();
+ 
   $('.left-nav-button-guide').hide();
 }
 
@@ -304,7 +289,7 @@ function leaveChannel(channel, obj) {
 
 $('.chat-top__button-leave').click(function() {
   if($('.chat-top__button-invite').is(':visible')) {
-    endMessaging(currChannelInfo, $(this))
+    endMessaging(currChannelInfo, $(this));
   } else {
     leaveChannel(currChannelInfo, $(this));
   }
@@ -427,10 +412,9 @@ $('.modal-hide-channel-submit').click(function() {
  **********************************************/
 $('#btn_messaging_chat').click(function() {
   popupInit();
-  $('.modal-guide-create').hide();
+ 
   $('.left-nav-button-guide').hide();
   $('.modal-open-chat').hide();
-  $('#btn_open_chat').removeClass('left-nav-open--active');
 
   if ($(this).hasClass('left-nav-messaging--active')) {
     $('.right-section__modal-bg').hide();
@@ -539,7 +523,7 @@ function startMessaging() {
       var channelMemberList = channelTitle;
       if (channelTitle.length > 20) {
         channelTitle = channelTitle.substring(0, 20);
-        channelTitle += '...'
+        channelTitle += '...';
       }
       var titleType = 1;
       var isGroup = true;
@@ -800,7 +784,7 @@ function addGroupChannel(isGroup, channelMemberList, targetChannel) {
     groupChannelListMembersAndProfileImageUpdate(targetChannel);
   }
 
-  $('.modal-guide-create').hide();
+  
   $('.left-nav-button-guide').hide();
 }
 
@@ -1043,18 +1027,22 @@ function startSendBird(userId, nickName) {
     if (error) {
       return;
     } else {
-      initPage(user);
-    }
-  });
+      console.log(user);
+      initPage(user, nickName);
+  }});
 
-  var initPage = function(user){
+  var initPage = function(user, newNickName){
     isInit = true;
     $('.init-check').hide();
 
     currentUser = user;
-    sb.updateCurrentUserInfo(nickName, '', function(response, error) {
-      // console.log(response, error);
-    });
+    if (newNickName) {
+    	sb.updateCurrentUserInfo(newNickName, '', function(response, error) {
+      	// console.log(response, error);
+    	});
+    }
+    //$('.left-nav-user-nickname').html(user.nickname);
+    updateUserDisplay(currentUser);
 
     GroupChannelListQuery = sb.GroupChannel.createMyGroupChannelListQuery();
     OpenChannelListQuery = sb.OpenChannel.createOpenChannelListQuery();
@@ -1717,11 +1705,6 @@ $('.right-section__modal-bg').click(function() {
 
 function navInit() {
   $('.right-section__modal-bg').hide();
-
-  // OPEN CHAT
-  $('#btn_open_chat').removeClass('left-nav-open--active');
-  $('.modal-open-chat').hide();
-
   // MESSAGING
   $('#btn_messaging_chat').removeClass('left-nav-messaging--active');
   $('.modal-messaging').hide();
@@ -1732,16 +1715,17 @@ function popupInit() {
   $('.chat-top__button-member').removeClass('chat-top__button-member--active');
   $('.modal-invite').hide();
   $('.chat-top__button-invite').removeClass('chat-top__button-invite--active');
+  $('.modal-user').hide();
 }
 
 function init() {
   userId = decodeURI(decodeURIComponent(getUrlVars()['userid']));
   userId = checkUserId(userId);
   nickname = decodeURI(decodeURIComponent(getUrlVars()['nickname']));
-
+  
   $('.init-check').show();
   startSendBird(userId, nickname);
-  $('.left-nav-user-nickname').html(nickname);
+  
 }
 
 $(document).ready(function() {
@@ -1759,4 +1743,41 @@ window.onfocus = function() {
     }
   });
 };
+
+
+// user profile
+
+function updateUserDisplay(user) {
+	$('.left-nav-user-nickname').html(user.nickname);
+	$('.left-nav-user-icon').css('background-image', 'url(' + user.profileUrl + ')');
+}
+
+$('#user_profile').click(function() {
+	console.log(sb.currentUser);
+	if ($('.modal-user').is(":visible")) {
+    	$('.modal-user').hide(); 
+    	$('.right-section__modal-bg').hide();
+  	} else {
+  		navInit();
+  		popupInit();
+  		$('#nickname').val(sb.currentUser.nickname);
+  		$('#avatar').val(sb.currentUser.profileUrl);
+  		$('.right-section__modal-bg').show();
+  		$('.modal-user').show();	
+  	} 
+	 
+});
+
+function updateInfo() {
+	var nickname = $('#nickname')[0].value;
+	var image_url = $('#avatar')[0].value;
+	
+	sb.updateCurrentUserInfo(nickname, image_url, function(response, error) {
+		console.log(error);
+  		navInit();
+  		popupInit();
+  		updateUserDisplay(sb.currentUser);
+	});		
+  }
+
 
